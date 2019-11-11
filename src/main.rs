@@ -1,9 +1,9 @@
-use serde_json::{Result, Value};
-use regex::Regex;
 use clap::{App, Arg};
-use std::path::PathBuf;
-use std::io;
+use regex::Regex;
+use serde_json::{Result, Value};
 use std::fs;
+use std::io;
+use std::path::PathBuf;
 
 const BIN_NAME: &str = "mdppet";
 
@@ -19,11 +19,8 @@ fn get_app() -> App<'static, 'static> {
         .about("mdppet is a tool to transfer markdown to vscode snippet json.")
         .version("0.1.0")
         .author("zombie110year <zombie110year@outlook.com>")
-        .arg(Arg::with_name("src")
-            .required(true))
-        .arg(Arg::with_name("dest")
-            .short("o")
-            .default_value("out.json"));
+        .arg(Arg::with_name("src").required(true))
+        .arg(Arg::with_name("dest").short("o").default_value("out.json"));
 
     return parser;
 }
@@ -34,7 +31,6 @@ fn get_read_stream(file: &PathBuf) -> io::BufReader<fs::File> {
     return istream;
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -42,10 +38,8 @@ mod tests {
     fn test_arg_parse() {
         let parser = get_app();
         let matches = parser.get_matches_from([BIN_NAME, "source.md", "-o", "output.json"].iter());
-        let src = matches.value_of("src")
-            .expect("无法获取到 src 参数的值");
-        let out = matches.value_of("dest")
-            .expect("无法获取到 dest 参数的值");
+        let src = matches.value_of("src").expect("无法获取到 src 参数的值");
+        let out = matches.value_of("dest").expect("无法获取到 dest 参数的值");
         assert_eq!(src, "source.md");
         assert_eq!(out, "output.json");
     }
