@@ -1,6 +1,9 @@
 use serde_json::{Result, Value};
 use regex::Regex;
 use clap::{App, Arg};
+use std::path::PathBuf;
+use std::io;
+use std::fs;
 
 const BIN_NAME: &str = "mdppet";
 
@@ -23,6 +26,12 @@ fn get_app() -> App<'static, 'static> {
             .default_value("out.json"));
 
     return parser;
+}
+
+fn get_read_stream(file: &PathBuf) -> io::BufReader<fs::File> {
+    let ifile = fs::File::open(file).ok().unwrap();
+    let istream = io::BufReader::new(ifile);
+    return istream;
 }
 
 
