@@ -33,7 +33,7 @@ $"#;
 #[derive(Serialize)]
 pub struct Snippet {
     prefix: String,
-    scope: Vec<String>,
+    scope: String,
     body: Vec<String>,
     description: Vec<String>,
 }
@@ -41,7 +41,7 @@ pub struct Snippet {
 impl Snippet {
     pub fn new(
         prefix: String,
-        scope: Vec<String>,
+        scope: String,
         body: Vec<String>,
         description: Vec<String>,
     ) -> Self {
