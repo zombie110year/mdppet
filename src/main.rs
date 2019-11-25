@@ -1,9 +1,11 @@
 use clap::{App, Arg};
 use regex::Regex;
-use serde_json::{Result, Value};
+use serde_json::Result;
+use serde::{Serialize, Deserialize};
 use std::fs;
 use std::io;
 use std::path::PathBuf;
+use std::collections::BTreeMap;
 
 const BIN_NAME: &str = "mdppet";
 
@@ -29,6 +31,40 @@ fn get_read_stream(file: &PathBuf) -> io::BufReader<fs::File> {
     let ifile = fs::File::open(file).ok().unwrap();
     let istream = io::BufReader::new(ifile);
     return istream;
+}
+
+/// # Snippet
+///
+/// 一个 Snippet 对象，具有
+///
+/// - 前缀: prefix
+/// - 作用域: scope
+/// - 补全体: body
+/// - 描述: description
+///
+/// 四条属性
+#[derive(Serialize)]
+pub struct Snippet {
+    prefix: String,
+    scope: Vec<String>,
+    body: Vec<String>,
+    description: Vec<String>,
+}
+
+impl Snippet {
+    pub fn new(
+        prefix: String,
+        scope: Vec<String>,
+        body: Vec<String>,
+        description: Vec<String>,
+    ) -> Self {
+        Snippet {
+            prefix,
+            scope,
+            body,
+            description,
+        }
+    }
 }
 
 #[cfg(test)]
