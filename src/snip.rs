@@ -1,4 +1,5 @@
 #![allow(dead_code)]
+use regex::Regex;
 use serde::Serialize;
 
 /// 用于匹配 Markdown 中一个 Snippet 片段的正则表达式
@@ -39,18 +40,42 @@ pub struct Snippet {
 }
 
 impl Snippet {
-    pub fn new(
-        prefix: String,
-        scope: String,
-        body: Vec<String>,
-        description: Vec<String>,
-    ) -> Self {
+    pub fn new(prefix: String, scope: String, body: Vec<String>, description: Vec<String>) -> Self {
         Snippet {
             prefix,
             scope,
             body,
             description,
         }
+    }
+
+    fn from_text(prefix: String, scope: String, body: String, description: String) -> Self {
+        let body = body.trim_end();
+        let description = description.trim_end();
+        let mut body_v: Vec<String> = Vec::new();
+        for i in body.split("\n") {
+            body_v.push(String::from(i));
+        }
+        let mut description_v: Vec<String> = Vec::new();
+        for i in description.split("\n") {
+            description_v.push(String::from(i));
+        }
+        Snippet {
+            prefix,
+            scope,
+            body: body_v,
+            description: description_v,
+        }
+    }
+
+    pub fn from_markdown(text: String) -> Self {
+        let re = Regex::new(MARKDOWN_RE).unwrap();
+        let m = re.captures(text.as_str()).unwrap();
+        let prefix = String::from(m.name("prefix").unwrap().as_str());
+        let scope = String::from(m.name("scope").unwrap().as_str());
+        let body = String::from(m.name("body").unwrap().as_str());
+        let description = String::from(m.name("description").unwrap().as_str());
+        return Snippet::from_text(prefix, scope, body, description);
     }
 }
 
@@ -88,5 +113,22 @@ mod tests {
             m.name("body").unwrap().as_str(),
             "println!(\"Hello World!\");\n"
         );
+    }
+    #[test]
+    fn test_snip_from_markdown() {
+        let mut text: String = String::new();
+
+        {
+            let md1_path = Path::new("tests/test_markdown_re_text.1.md");
+            let md1_file = File::open(md1_path).unwrap();
+            let mut md1_reader = BufReader::new(md1_file);
+            md1_reader.read_to_string(&mut text).unwrap();
+        }
+
+        let snip = Snippet::from_markdown(text);
+        assert_eq!(snip.prefix, String::from("hello"));
+        assert_eq!(snip.scope, String::from("rust"));
+        assert_eq!(snip.body, vec![String::from("println!(\"Hello World!\");")]);
+        assert_eq!(snip.description, vec![String::from("Rust 的 HelloWorld 代码")]);
     }
 }
