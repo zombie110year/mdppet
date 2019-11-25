@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 use regex::Regex;
 use serde::Serialize;
-use std::collections::BTreeMap;
 use std::fmt::Debug;
 
 /// 用于匹配 Markdown 中一个 Snippet 片段的正则表达式
