@@ -19,8 +19,7 @@ const MARKDOWN_RE: &str = r#"((?msx)
 ```(?:\S+)?\n
 (?P<body>.+?)
 ```
-)
-"#;
+)"#;
 
 /// # Snippet
 ///

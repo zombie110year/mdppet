@@ -38,7 +38,7 @@ fn main() {
 fn get_app() -> App<'static, 'static> {
     let parser = App::new(BIN_NAME)
         .about("mdppet is a tool to transfer markdown to vscode snippet json.")
-        .version("0.1.0")
+        .version("0.1.1")
         .author("zombie110year <zombie110year@outlook.com>")
         .arg(Arg::with_name("src").required(true))
         .arg(Arg::with_name("dest").short("o").default_value("out.json"));
