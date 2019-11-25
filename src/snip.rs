@@ -1,6 +1,5 @@
 #![allow(dead_code)]
 use regex::Regex;
-use serde::Serialize;
 use std::fmt::Debug;
 
 /// 用于匹配 Markdown 中一个 Snippet 片段的正则表达式
@@ -47,14 +46,15 @@ $"#;
 /// "#;
 ///
 /// let snip = Snippet::from_markdown(markdown);
+/// assert_eq!(snip.identifier, String::from("a"));
 /// assert_eq!(snip.prefix, String::from("b"));
 /// assert_eq!(snip.scope, String::from("rust"));
 /// assert_eq!(snip.description, vec![String::from("description")]);
 /// assert_eq!(snip.body, vec![String::from("body")]);
 /// ```
-#[derive(Serialize)]
 #[derive(Debug)]
 pub struct Snippet {
+    identifier: String,
     prefix: String,
     scope: String,
     body: Vec<String>,
@@ -62,7 +62,14 @@ pub struct Snippet {
 }
 
 impl Snippet {
-    pub fn new(prefix: &str, scope: &str, body: &Vec<&str>, description: &Vec<&str>) -> Self {
+    pub fn new(
+        identifier: &str,
+        prefix: &str,
+        scope: &str,
+        body: &Vec<&str>,
+        description: &Vec<&str>,
+    ) -> Self {
+        let identifier_new = String::from(identifier);
         let prefix_new = String::from(prefix);
         let scope_new = String::from(scope);
         let mut body_new: Vec<String> = Vec::new();
@@ -76,6 +83,7 @@ impl Snippet {
         }
 
         Snippet {
+            identifier: identifier_new,
             prefix: prefix_new,
             scope: scope_new,
             body: body_new,
@@ -83,7 +91,13 @@ impl Snippet {
         }
     }
 
-    pub fn from_text(prefix: &str, scope: &str, body: &str, description: &str) -> Self {
+    pub fn from_text(
+        identifier: &str,
+        prefix: &str,
+        scope: &str,
+        body: &str,
+        description: &str,
+    ) -> Self {
         let body = body.trim_end();
         let description = description.trim_end();
         let mut body_v: Vec<String> = Vec::new();
@@ -95,6 +109,7 @@ impl Snippet {
             description_v.push(String::from(i));
         }
         Snippet {
+            identifier: String::from(identifier),
             prefix: String::from(prefix),
             scope: String::from(scope),
             body: body_v,
@@ -105,11 +120,12 @@ impl Snippet {
     pub fn from_markdown(text: &str) -> Self {
         let re = Regex::new(MARKDOWN_RE).unwrap();
         let m = re.captures(text).unwrap();
+        let id = m.name("id").unwrap().as_str();
         let prefix = m.name("prefix").unwrap().as_str();
         let scope = m.name("scope").unwrap().as_str();
         let body = m.name("body").unwrap().as_str();
         let description = m.name("description").unwrap().as_str();
-        return Snippet::from_text(prefix, scope, body, description);
+        return Snippet::from_text(id, prefix, scope, body, description);
     }
 }
 
@@ -169,6 +185,7 @@ mod tests {
         }
 
         let snip = Snippet::from_markdown(text.as_str());
+        assert_eq!(snip.identifier, String::from("hello "));
         assert_eq!(snip.prefix, String::from("hello"));
         assert_eq!(snip.scope, String::from("rust"));
         assert_eq!(snip.body, vec![String::from("println!(\"Hello World!\");")]);
