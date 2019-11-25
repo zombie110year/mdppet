@@ -1,5 +1,7 @@
 #![allow(dead_code)]
 use regex::Regex;
+use serde::Serialize;
+use std::collections::BTreeMap;
 use std::fmt::Debug;
 
 /// 用于匹配 Markdown 中一个 Snippet 片段的正则表达式
@@ -46,15 +48,21 @@ $"#;
 /// "#;
 ///
 /// let snip = Snippet::from_markdown(markdown);
-/// assert_eq!(snip.identifier, String::from("a"));
-/// assert_eq!(snip.prefix, String::from("b"));
-/// assert_eq!(snip.scope, String::from("rust"));
-/// assert_eq!(snip.description, vec![String::from("description")]);
-/// assert_eq!(snip.body, vec![String::from("body")]);
+/// assert_eq!(snip.get_identifier(), &String::from("a"));
+/// assert_eq!(snip.get_prefix(), &String::from("b"));
+/// assert_eq!(snip.get_scope(), &String::from("rust"));
+/// assert_eq!(snip.get_description(), &vec![String::from("description")]);
+/// assert_eq!(snip.get_body(), &vec![String::from("body")]);
 /// ```
 #[derive(Debug)]
 pub struct Snippet {
     identifier: String,
+    body: SnippetBody,
+}
+
+#[derive(Serialize)]
+#[derive(Debug)]
+pub struct SnippetBody {
     prefix: String,
     scope: String,
     body: Vec<String>,
@@ -82,12 +90,12 @@ impl Snippet {
             description_new.push(String::from(*i));
         }
 
+        let body = SnippetBody::new(
+            prefix_new, scope_new, body_new, description_new
+        );
         Snippet {
             identifier: identifier_new,
-            prefix: prefix_new,
-            scope: scope_new,
-            body: body_new,
-            description: description_new,
+            body,
         }
     }
 
@@ -108,12 +116,16 @@ impl Snippet {
         for i in description.split("\n") {
             description_v.push(String::from(i));
         }
+
+        let body = SnippetBody::new(
+            String::from(prefix),
+            String::from(scope),
+            body_v,
+            description_v,
+        );
         Snippet {
             identifier: String::from(identifier),
-            prefix: String::from(prefix),
-            scope: String::from(scope),
-            body: body_v,
-            description: description_v,
+            body,
         }
     }
 
@@ -126,6 +138,36 @@ impl Snippet {
         let body = m.name("body").unwrap().as_str();
         let description = m.name("description").unwrap().as_str();
         return Snippet::from_text(id, prefix, scope, body, description);
+    }
+
+    pub fn get_identifier(&self) -> &String {
+        return &self.identifier;
+    }
+    pub fn get_snippetbody(&self) -> &SnippetBody {
+        return &self.body;
+    }
+    pub fn get_prefix(&self) -> &String {
+        return &self.body.prefix;
+    }
+    pub fn get_scope(&self) -> &String {
+        return &self.body.scope;
+    }
+    pub fn get_body(&self) -> &Vec<String> {
+        return &self.body.body;
+    }
+    pub fn get_description(&self) -> &Vec<String> {
+        return &self.body.description;
+    }
+}
+
+impl SnippetBody {
+    pub fn new(prefix: String, scope: String, body: Vec<String>, description: Vec<String>) -> Self {
+        SnippetBody {
+            prefix,
+            scope,
+            body,
+            description,
+        }
     }
 }
 
@@ -185,13 +227,13 @@ mod tests {
         }
 
         let snip = Snippet::from_markdown(text.as_str());
-        assert_eq!(snip.identifier, String::from("hello "));
-        assert_eq!(snip.prefix, String::from("hello"));
-        assert_eq!(snip.scope, String::from("rust"));
-        assert_eq!(snip.body, vec![String::from("println!(\"Hello World!\");")]);
+        assert_eq!(snip.get_identifier(), &String::from("hello"));
+        assert_eq!(snip.get_prefix(), &String::from("hello"));
+        assert_eq!(snip.get_scope(), &String::from("rust"));
+        assert_eq!(snip.get_body(), &vec![String::from("println!(\"Hello World!\");")]);
         assert_eq!(
-            snip.description,
-            vec![String::from("Rust 的 HelloWorld 代码")]
+            snip.get_description(),
+            &vec![String::from("Rust 的 HelloWorld 代码")]
         );
     }
 }
