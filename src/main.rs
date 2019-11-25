@@ -32,6 +32,7 @@ fn main() {
 
     let serielized_text = serde_json::to_string_pretty(&json_buffer).ok().unwrap();
     write!(&mut ostream, "{}", serielized_text).ok().unwrap();
+    println!("{} -> {}", src, out);
 }
 
 fn get_app() -> App<'static, 'static> {
