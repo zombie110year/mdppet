@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 use regex::Regex;
 use serde::Serialize;
+use std::fmt::Debug;
 
 /// 用于匹配 Markdown 中一个 Snippet 片段的正则表达式
 ///
@@ -52,6 +53,7 @@ $"#;
 /// assert_eq!(snip.body, vec![String::from("body")]);
 /// ```
 #[derive(Serialize)]
+#[derive(Debug)]
 pub struct Snippet {
     prefix: String,
     scope: String,
@@ -170,6 +172,9 @@ mod tests {
         assert_eq!(snip.prefix, String::from("hello"));
         assert_eq!(snip.scope, String::from("rust"));
         assert_eq!(snip.body, vec![String::from("println!(\"Hello World!\");")]);
-        assert_eq!(snip.description, vec![String::from("Rust 的 HelloWorld 代码")]);
+        assert_eq!(
+            snip.description,
+            vec![String::from("Rust 的 HelloWorld 代码")]
+        );
     }
 }

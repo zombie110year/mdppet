@@ -3,7 +3,8 @@ mod snip;
 use clap::{App, Arg};
 use std::fs;
 use std::io;
-use std::path::PathBuf;
+use std::io::Read;
+use std::path::Path;
 
 const BIN_NAME: &str = "mdppet";
 
@@ -11,7 +12,18 @@ fn main() {
     let args = get_app().get_matches();
     let src = args.value_of("src").unwrap();
     let out = args.value_of("dest").unwrap();
-    println!("{} -> {}", src, out);
+    let mut text = String::new();
+    let mut snips: Vec<snip::Snippet> = Vec::new();
+
+    let mut istream = get_read_stream(Path::new(src));
+    istream.read_to_string(&mut text).unwrap();
+    for md in snip::get_snippet_segments(&text) {
+        snips.push(snip::Snippet::from_markdown(md));
+    }
+
+    for i in snips {
+        println!("{:#?}", i);
+    }
 }
 
 fn get_app() -> App<'static, 'static> {
@@ -25,8 +37,7 @@ fn get_app() -> App<'static, 'static> {
     return parser;
 }
 
-#[allow(dead_code)]
-fn get_read_stream(file: &PathBuf) -> io::BufReader<fs::File> {
+fn get_read_stream(file: &Path) -> io::BufReader<fs::File> {
     let ifile = fs::File::open(file).ok().unwrap();
     let istream = io::BufReader::new(ifile);
     return istream;
