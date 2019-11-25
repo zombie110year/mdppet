@@ -31,6 +31,26 @@ $"#;
 /// - 描述: description
 ///
 /// 四条属性
+///
+/// 推荐使用 `from_markdown` 方法实例化。
+///
+/// ## 示例
+///
+/// ```rust
+/// let markdown = r#"
+/// # a/b/rust
+/// description
+/// ```rust
+/// body
+/// ```
+/// "#;
+///
+/// let snip = Snippet::from_markdown(markdown);
+/// assert_eq!(snip.prefix, String::from("b"));
+/// assert_eq!(snip.scope, String::from("rust"));
+/// assert_eq!(snip.description, vec![String::from("description")]);
+/// assert_eq!(snip.body, vec![String::from("body")]);
+/// ```
 #[derive(Serialize)]
 pub struct Snippet {
     prefix: String,
@@ -40,16 +60,28 @@ pub struct Snippet {
 }
 
 impl Snippet {
-    pub fn new(prefix: String, scope: String, body: Vec<String>, description: Vec<String>) -> Self {
+    pub fn new(prefix: &str, scope: &str, body: &Vec<&str>, description: &Vec<&str>) -> Self {
+        let prefix_new = String::from(prefix);
+        let scope_new = String::from(scope);
+        let mut body_new: Vec<String> = Vec::new();
+        let mut description_new: Vec<String> = Vec::new();
+
+        for i in body.iter() {
+            body_new.push(String::from(*i));
+        }
+        for i in description.iter() {
+            description_new.push(String::from(*i));
+        }
+
         Snippet {
-            prefix,
-            scope,
-            body,
-            description,
+            prefix: prefix_new,
+            scope: scope_new,
+            body: body_new,
+            description: description_new,
         }
     }
 
-    fn from_text(prefix: String, scope: String, body: String, description: String) -> Self {
+    pub fn from_text(prefix: &str, scope: &str, body: &str, description: &str) -> Self {
         let body = body.trim_end();
         let description = description.trim_end();
         let mut body_v: Vec<String> = Vec::new();
@@ -61,20 +93,20 @@ impl Snippet {
             description_v.push(String::from(i));
         }
         Snippet {
-            prefix,
-            scope,
+            prefix: String::from(prefix),
+            scope: String::from(scope),
             body: body_v,
             description: description_v,
         }
     }
 
-    pub fn from_markdown(text: String) -> Self {
+    pub fn from_markdown(text: &str) -> Self {
         let re = Regex::new(MARKDOWN_RE).unwrap();
-        let m = re.captures(text.as_str()).unwrap();
-        let prefix = String::from(m.name("prefix").unwrap().as_str());
-        let scope = String::from(m.name("scope").unwrap().as_str());
-        let body = String::from(m.name("body").unwrap().as_str());
-        let description = String::from(m.name("description").unwrap().as_str());
+        let m = re.captures(text).unwrap();
+        let prefix = m.name("prefix").unwrap().as_str();
+        let scope = m.name("scope").unwrap().as_str();
+        let body = m.name("body").unwrap().as_str();
+        let description = m.name("description").unwrap().as_str();
         return Snippet::from_text(prefix, scope, body, description);
     }
 }
@@ -134,7 +166,7 @@ mod tests {
             md1_reader.read_to_string(&mut text).unwrap();
         }
 
-        let snip = Snippet::from_markdown(text);
+        let snip = Snippet::from_markdown(text.as_str());
         assert_eq!(snip.prefix, String::from("hello"));
         assert_eq!(snip.scope, String::from("rust"));
         assert_eq!(snip.body, vec![String::from("println!(\"Hello World!\");")]);
