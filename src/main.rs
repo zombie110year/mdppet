@@ -1,9 +1,10 @@
 mod snip;
 
 use clap::{App, Arg};
+use std::collections::BTreeMap;
 use std::fs;
 use std::io;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::path::Path;
 
 const BIN_NAME: &str = "mdppet";
@@ -21,9 +22,16 @@ fn main() {
         snips.push(snip::Snippet::from_markdown(md));
     }
 
-    for i in snips {
-        println!("{:#?}", i);
+    let mut json_buffer: BTreeMap<&str, &snip::SnippetBody> = BTreeMap::new();
+    let mut ostream = fs::File::create(Path::new(out)).ok().unwrap();
+    for i in snips.iter() {
+        let id = i.get_identifier().as_str();
+        let body = i.get_snippetbody();
+        json_buffer.insert(id, body);
     }
+
+    let serielized_text = serde_json::to_string_pretty(&json_buffer).ok().unwrap();
+    write!(&mut ostream, "{}", serielized_text).ok().unwrap();
 }
 
 fn get_app() -> App<'static, 'static> {
