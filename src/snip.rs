@@ -17,10 +17,10 @@ const MARKDOWN_RE: &str = r#"((?msx)
 )
 \n+
 ```(?:\S+)?\n
-(?P<body>.+)
+(?P<body>.+?)
 ```
 )
-$"#;
+"#;
 
 /// # Snippet
 ///
@@ -59,8 +59,7 @@ pub struct Snippet {
     body: SnippetBody,
 }
 
-#[derive(Serialize)]
-#[derive(Debug)]
+#[derive(Serialize, Debug)]
 pub struct SnippetBody {
     prefix: String,
     scope: String,
@@ -89,9 +88,7 @@ impl Snippet {
             description_new.push(String::from(*i));
         }
 
-        let body = SnippetBody::new(
-            prefix_new, scope_new, body_new, description_new
-        );
+        let body = SnippetBody::new(prefix_new, scope_new, body_new, description_new);
         Snippet {
             identifier: identifier_new,
             body,
@@ -216,23 +213,120 @@ mod tests {
     }
     #[test]
     fn test_snip_from_markdown() {
-        let mut text: String = String::new();
-
-        {
-            let md1_path = Path::new("tests/test_markdown_re_text.1.md");
-            let md1_file = File::open(md1_path).unwrap();
-            let mut md1_reader = BufReader::new(md1_file);
-            md1_reader.read_to_string(&mut text).unwrap();
-        }
+        let text = read_text("tests/test_markdown_re_text.1.md");
 
         let snip = Snippet::from_markdown(text.as_str());
         assert_eq!(snip.get_identifier(), &String::from("hello"));
         assert_eq!(snip.get_prefix(), &String::from("hello"));
         assert_eq!(snip.get_scope(), &String::from("rust"));
-        assert_eq!(snip.get_body(), &vec![String::from("println!(\"Hello World!\");")]);
+        assert_eq!(
+            snip.get_body(),
+            &vec![String::from("println!(\"Hello World!\");")]
+        );
         assert_eq!(
             snip.get_description(),
             &vec![String::from("Rust 的 HelloWorld 代码")]
         );
+    }
+    #[test]
+    fn test_multi_snip_markdown_1() {
+        let text: String = read_text("tests/test_markdown.2.md");
+
+        let snips: Vec<Snippet> = get_snippet_segments(&text)
+            .iter()
+            .map(|&md_text| Snippet::from_markdown(md_text))
+            .collect();
+
+        let snip1 = &snips[0];
+        assert_eq!(snip1.get_identifier().as_str(), "a");
+        assert_eq!(snip1.get_prefix().as_str(), "b");
+        assert_eq!(snip1.get_scope().as_str(), "c");
+        assert_eq!(
+            snip1
+                .get_description()
+                .iter()
+                .map(|line| line.as_str())
+                .collect::<Vec<&str>>(),
+            vec!["desp"]
+        );
+        assert_eq!(
+            snip1
+                .get_body()
+                .iter()
+                .map(|line| line.as_str())
+                .collect::<Vec<&str>>(),
+            vec!["println!(\"Hello\");"]
+        );
+    }
+    #[test]
+    fn test_multi_snip_markdown_2() {
+        let text: String = read_text("tests/test_markdown.2.md");
+
+        let snips: Vec<Snippet> = get_snippet_segments(&text)
+            .iter()
+            .map(|&md_text| Snippet::from_markdown(md_text))
+            .collect();
+
+        let snip1 = &snips[1];
+        assert_eq!(snip1.get_identifier().as_str(), "e");
+        assert_eq!(snip1.get_prefix().as_str(), "f");
+        assert_eq!(snip1.get_scope().as_str(), "g");
+        assert_eq!(
+            snip1
+                .get_description()
+                .iter()
+                .map(|line| line.as_str())
+                .collect::<Vec<&str>>(),
+            vec!["desp2", "desp2"]
+        );
+        assert_eq!(
+            snip1
+                .get_body()
+                .iter()
+                .map(|line| line.as_str())
+                .collect::<Vec<&str>>(),
+            vec!["abc"]
+        );
+    }
+    #[test]
+    fn test_multi_snip_markdown_3() {
+        let text: String = read_text("tests/test_markdown.2.md");
+
+        let snips: Vec<Snippet> = get_snippet_segments(&text)
+            .iter()
+            .map(|&md_text| Snippet::from_markdown(md_text))
+            .collect();
+
+        let snip1 = &snips[2];
+        assert_eq!(snip1.get_identifier().as_str(), "abc");
+        assert_eq!(snip1.get_prefix().as_str(), "123");
+        assert_eq!(snip1.get_scope().as_str(), "python,lua");
+        assert_eq!(
+            snip1
+                .get_description()
+                .iter()
+                .map(|line| line.as_str())
+                .collect::<Vec<&str>>(),
+            vec!["desp3", "desp4"]
+        );
+        assert_eq!(
+            snip1
+                .get_body()
+                .iter()
+                .map(|line| line.as_str())
+                .collect::<Vec<&str>>(),
+            vec!["print(\"Hello1\")", "print(\"Hello2\")"]
+        );
+    }
+
+    fn read_text(path: &str) -> String {
+        let mut text: String = String::new();
+        {
+            let md_path = Path::new(path);
+            let md_file = File::open(md_path).unwrap();
+            let mut reader = BufReader::new(md_file);
+            reader.read_to_string(&mut text).unwrap();
+        }
+        return text;
     }
 }
