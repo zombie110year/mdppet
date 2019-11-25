@@ -79,6 +79,15 @@ impl Snippet {
     }
 }
 
+pub fn get_snippet_segments<'a>(text: &'a String) -> Vec<&'a str> {
+    let mut segments: Vec<&str> = Vec::new();
+    let re = Regex::new(MARKDOWN_RE).unwrap();
+    for segment in re.find_iter(text.as_str()) {
+        segments.push(segment.as_str());
+    }
+    return segments;
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
